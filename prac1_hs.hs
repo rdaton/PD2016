@@ -1,13 +1,28 @@
-segEnAnyo x = x * 365 * 24 * 60 * 60
+segEnAnyo x = x * 31536000 -- 365 * 24 * 60 * 60
 edadUniverso= 13700 * 10^6 
 petaFlop = 10^15
+segEnDia x = x * 86400 --(24 * 60 * 60)
 prac1a = (petaFlop * 93 * segEnAnyo edadUniverso)::Double
 
-prac1b x = x `div` segEnAnyo 1
+anyosEnSeg x = x `div` segEnAnyo 1
 
-segRestantesAnyo x = x - ((prac1b x) * segEnAnyo 1 )
-diasEnSeg x = (segRestantesAnyo x) `div` (24 * 60 * 60)
-diasRestantes x =   
+prac1b x = anyosEnSeg x
+
+segRestantesAnyo x = x - (segEnAnyo (anyosEnSeg x))
+
+diasEnSeg x = (segRestantesAnyo x) `div` (segEnDia 1)
+segRestantesDia x = segRestantesAnyo x - segEnDia (diasEnSeg x) 
+
+horasEnSeg x = (segRestantesDia x) `div` (3600)
+segRestantesHora x = segRestantesDia x - (3600 * horasEnSeg x)
+
+minutosEnSeg x = (segRestantesHora x) `div` 60
+segRestantesMinutos x = segRestantesHora x- (60* minutosEnSeg x)
 
 
-prac1c x = (prac1b x, diasEnSeg () , 0, 0)
+
+prac1c x = (anyosEnSeg x, diasEnSeg x, horasEnSeg x,minutosEnSeg x,segRestantesMinutos x)
+
+
+prac2b x y = 2*x - y*x
+prac2c x = prac2b (prac2b 2 x) (prac2b x 1)

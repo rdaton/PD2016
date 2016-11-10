@@ -1,0 +1,11 @@
+flip
+reverse
+cancelación argumentos
+fold r , funcion de combinacion la hacemos nosotros, foldl asosciación por derecha
+foldr asocia por izquierda
+
+hoja1:
+10^10 ...  317 años  35  días   17 horas 46  minutes  40  seconds
+
+el valor de e debe ser compatible
+foldr mi_func e [x1,...xn] = x1 mi_func(x2 mi_func)... mi_func e ))
