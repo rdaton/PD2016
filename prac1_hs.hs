@@ -26,8 +26,16 @@ prac1c x = (anyosEnSeg x, diasEnSeg x, horasEnSeg x,minutosEnSeg x,segRestantesM
 
 --ejercicio 2
 f x y = 2*x - y*x
+f' x y =(-) ((*)2 x) ((*)y x)
 g x =  f (f 2 x)  (f x 1)
 h x y z =  f (f (x+2*y) (g 3)) (5 - (g z) - y)
 i x y = 
-	if
+       if (x>=y) && (y>0)  then x-y else
+       if (y>x) && (y>0) then 0
+       else y-x
 
+i' x y 
+       | (x>=y) && (y>0) = x-y 
+       | (y>x) && (y>0) = 0
+       | True = y-x
+       

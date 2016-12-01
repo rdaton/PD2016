@@ -14,3 +14,4 @@ instance show complex where
 
 data Direccion = N | S | E | O deriving (Eq,Ord, Show)
 data Punto = P Int Int deriving (Eq,Ord,Show)
+--type Punto = (Int, Int) -- es como un define (desaparece)
