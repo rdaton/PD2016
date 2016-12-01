@@ -1,0 +1,16 @@
+data Complex = C Double Double
+	deriving Eq
+	
+instance num complex where 
+	C a b + C c d = C(a+c) (b+d)
+	C a b - C c d = C(a-c) (b-d)
+	C a b * C c d = C(a-c) (b-d)
+	
+--el tipo de show ya está dado	
+instance show complex where
+	show (C x y )
+
+--direcciones
+
+data Direccion = N | S | E | O deriving (Eq,Ord, Show)
+data Punto = P Int Int deriving (Eq,Ord,Show)

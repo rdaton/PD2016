@@ -1,0 +1,39 @@
+#!/bin/bash
+#---------------------------------------------
+# Script to start GeoGebra-Portable
+#---------------------------------------------
+
+#---------------------------------------------
+# Export name of this script
+
+export GG_SCRIPTNAME=$(basename $0)
+
+#---------------------------------------------
+# Find out path of this script
+
+GG_PATH="${BASH_SOURCE[0]}"
+if [ -h "${GG_PATH}" ]; then
+	while [ -h "${GG_PATH}" ]; do
+		GG_PATH=`readlink "${GG_PATH}"`
+	done
+fi
+pushd . > /dev/null
+cd `dirname ${GG_PATH}` > /dev/null
+GG_PATH=`pwd`
+popd > /dev/null
+
+#---------------------------------------------
+# Export Java Command
+
+ARCH=`arch`
+export JAVACMD="$GG_PATH/jre1.7.0_45-$ARCH/bin/java"
+
+#---------------------------------------------
+# Export path of directory containing .$GG_SCRIPTNAME/geogebra.conf
+
+export GG_CONFIG_PATH="$GG_PATH"
+
+#---------------------------------------------
+# Run
+
+exec "$GG_PATH/geogebra/geogebra" --settingsfile="$GG_PATH/geogebra.properties" "$@"

@@ -1,3 +1,4 @@
+--ejercicio 1
 segEnAnyo x = x * 31536000 -- 365 * 24 * 60 * 60
 edadUniverso= 13700 * 10^6 
 petaFlop = 10^15
@@ -23,6 +24,10 @@ segRestantesMinutos x = segRestantesHora x- (60* minutosEnSeg x)
 
 prac1c x = (anyosEnSeg x, diasEnSeg x, horasEnSeg x,minutosEnSeg x,segRestantesMinutos x)
 
+--ejercicio 2
+f x y = 2*x - y*x
+g x =  f (f 2 x)  (f x 1)
+h x y z =  f (f (x+2*y) (g 3)) (5 - (g z) - y)
+i x y = 
+	if
 
-prac2b x y = 2*x - y*x
-prac2c x = prac2b (prac2b 2 x) (prac2b x 1)

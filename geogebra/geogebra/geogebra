@@ -1,0 +1,436 @@
+#!/bin/bash
+#---------------------------------------------
+# Script to start GeoGebra
+#---------------------------------------------
+
+#---------------------------------------------
+# Used environment variables:
+#
+# GG_SCRIPTNAME=<name of originally called script to start GeoGebra> # If unset, name of this script will be used.
+#
+# GG_PATH=<path of directory containing geogebra.jar> # If unset, path of this script will be used.
+# In this case if the path of script does not contain the geogebra.jar file, /usr/share/geogebra will be used.
+#
+# GG_SYS_CONFIG_PATH=<path of system directory containing geogebra.conf>
+#
+# GG_CONFIG_PATH=<path of directory containing .config/$GG_SCRIPTNAME/geogebra.conf> # If unset, $HOME will be used.
+#
+# JAVACMD=<Java command> # If unset, java will be used.
+#
+# GG_XMS=<initial Java heap size> # If unset, 32m will be used.
+#
+# GG_XMX=<maximum Java heap size> # If unset, 1024m will be used.
+#
+# GG_DJAVA_LIBRARY_PATH=<native library path>
+#
+# GG_DSUN_JAVA2D_XRENDER=<boolean>
+#
+# GG_DSUN_JAVA2D_OPENGL=<boolean>
+#
+# GG_SHOWSPLASH=<boolean> # If unset, false will be used.
+#
+# GG_ENABLEUNDO=<boolean>
+#
+# GG_ANTIALIASING=<boolean>
+#
+# GG_VERSIONCHECKALLOW=<setting>
+
+#---------------------------------------------
+# If $GG_SCRIPTNAME not set, use name of this script.
+
+if [ -z "$GG_SCRIPTNAME" ]; then
+	GG_SCRIPTNAME="$(basename $0)"
+fi
+
+#---------------------------------------------
+# If $GG_PATH not set, use path of this script.
+
+if [ -z "$GG_PATH" ]; then
+	GG_PATH="${BASH_SOURCE[0]}"
+	if [ -h "${GG_PATH}" ]; then
+		while [ -h "${GG_PATH}" ]; do
+			GG_PATH=`readlink "${GG_PATH}"`
+		done
+	fi
+	pushd . > /dev/null
+        DIRNAME=`dirname "${GG_PATH}"`
+	cd "$DIRNAME" > /dev/null
+	GG_PATH=`pwd`
+	popd > /dev/null
+	test -r "${GG_PATH}/geogebra_main.jar" || GG_PATH='/usr/share/geogebra'
+fi
+
+#---------------------------------------------
+# If $GG_CONFIG_PATH not set, use $HOME.
+
+if [ -z "$GG_CONFIG_PATH" ]; then
+	GG_CONFIG_PATH="$HOME"
+fi
+
+#---------------------------------------------
+# If $JAVACMD not set, use java or (preferred) GeoGebra's Java or Oracle's Java 7.
+
+ORACLE_JAVA=/usr/lib/jvm/java-7-oracle/jre/bin/java
+GEOGEBRA_JAVA=/usr/lib/jvm/java-geogebra/bin/java
+
+if [ -z "$JAVACMD" ]; then
+	if [ -x $GEOGEBRA_JAVA ]; then
+		JAVACMD="$GEOGEBRA_JAVA"
+	elif [ -x $ORACLE_JAVA ]; then
+		JAVACMD="$ORACLE_JAVA"
+	else
+		JAVACMD='java'
+	fi
+fi
+
+#---------------------------------------------
+# If $GG_XMS not set, use 32m.
+
+if [ -z "$GG_XMS" ]; then
+	GG_XMS='32m'
+fi
+
+#---------------------------------------------
+# If $GG_XMX not set, use 1024m.
+
+if [ -z "$GG_XMX" ]; then
+	GG_XMX='1024m'
+fi
+
+#---------------------------------------------
+# If $GG_SHOWSPLASH not set, use false.
+
+if [ -z "$GG_SHOWSPLASH" ]; then
+	GG_SHOWSPLASH='false'
+fi
+
+#---------------------------------------------
+# Set path of settings file.
+
+GG_SETTINGS_FILE="$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties"
+
+#---------------------------------------------
+# If $GG_SYS_CONFIG_PATH is set, read system config files (if exist).
+
+if [ -n "$GG_SYS_CONFIG_PATH" ]; then
+	if [ -e "$GG_SYS_CONFIG_PATH/geogebra.conf" ]; then
+		. "$GG_SYS_CONFIG_PATH/geogebra.conf"
+	fi
+	if [ -e "$GG_SYS_CONFIG_PATH/geogebra.conf.local" ]; then
+		. "$GG_SYS_CONFIG_PATH/geogebra.conf.local"
+	fi
+fi
+
+#---------------------------------------------
+# Prefer default settings from system config files.
+
+if [ -n "$DEFAULT_JAVACMD" ]; then
+	JAVACMD="$DEFAULT_JAVACMD"
+	unset DEFAULT_JAVACMD
+fi
+if [ -n "$DEFAULT_GG_XMS" ]; then
+	GG_XMS="$DEFAULT_GG_XMS"
+	unset DEFAULT_GG_XMS
+fi
+if [ -n "$DEFAULT_GG_XMX" ]; then
+	GG_XMX="$DEFAULT_GG_XMX"
+	unset DEFAULT_GG_XMX
+fi
+if [ -n "$DEFAULT_GG_DJAVA_LIBRARY_PATH" ]; then
+	GG_DJAVA_LIBRARY_PATH="$DEFAULT_GG_DJAVA_LIBRARY_PATH"
+	unset DEFAULT_GG_DJAVA_LIBRARY_PATH
+fi
+if [ -n "$DEFAULT_GG_DSUN_JAVA2D_XRENDER" ]; then
+	GG_DSUN_JAVA2D_XRENDER="$DEFAULT_GG_DSUN_JAVA2D_XRENDER"
+	unset DEFAULT_GG_DSUN_JAVA2D_XRENDER
+fi
+if [ -n "$DEFAULT_GG_DSUN_JAVA2D_OPENGL" ]; then
+	GG_DSUN_JAVA2D_OPENGL="$DEFAULT_GG_DSUN_JAVA2D_OPENGL"
+	unset DEFAULT_GG_DSUN_JAVA2D_OPENGL
+fi
+if [ -n "$DEFAULT_GG_SHOWSPLASH" ]; then
+	GG_SHOWSPLASH="$DEFAULT_GG_SHOWSPLASH"
+	unset DEFAULT_GG_SHOWSPLASH
+fi
+if [ -n "$DEFAULT_GG_ENABLEUNDO" ]; then
+	GG_ENABLEUNDO="$DEFAULT_GG_ENABLEUNDO"
+	unset DEFAULT_GG_ENABLEUNDO
+fi
+if [ -n "$DEFAULT_GG_ANTIALIASING" ]; then
+	GG_ANTIALIASING="$DEFAULT_GG_ANTIALIASING"
+	unset DEFAULT_GG_ANTIALIASING
+fi
+if [ -n "$DEFAULT_GG_VERSIONCHECKALLOW" ]; then
+	GG_VERSIONCHECKALLOW="$DEFAULT_GG_VERSIONCHECKALLOW"
+	unset DEFAULT_GG_VERSIONCHECKALLOW
+fi
+
+#---------------------------------------------
+# Read user config file (if exists) and rewrite it.
+
+GG_CONFIG_FILE="$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.conf"
+if [ ! -w "$GG_CONFIG_FILE" ]; then
+	if [ ! -e "$GG_CONFIG_FILE" -a -w "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME" ]; then
+		touch "$GG_CONFIG_FILE"
+	elif [ ! -e "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME" -a -w "$GG_CONFIG_PATH/.config" ]; then
+		mkdir "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME"
+		touch "$GG_CONFIG_FILE"
+	elif [ ! -e "$GG_CONFIG_PATH/.config" -a -w "$GG_CONFIG_PATH" ]; then
+		mkdir "$GG_CONFIG_PATH/.config"
+		mkdir "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME"
+		touch "$GG_CONFIG_FILE"
+	fi
+fi
+if [ -w "$GG_CONFIG_FILE" ]; then
+	. "$GG_CONFIG_FILE"
+	true > "$GG_CONFIG_FILE"
+	cat > "$GG_CONFIG_FILE" << EOF
+# This is the default GeoGebra configuration file. It shows what the defaults
+# for various options happen to be.
+#
+# If you don't need to change the default, you shouldn't uncomment the line.
+# Doing so may cause run-time problems.
+
+
+# JAVA OPTIONS
+# -----------------------------------------------------------------------------
+
+# Set Java command, e.g. '/usr/bin/java'.
+#
+`if [ ! -n "$DEFAULT_JAVACMD" ]; then echo "#DEFAULT_JAVACMD='$JAVACMD'"; else echo "DEFAULT_JAVACMD='$DEFAULT_JAVACMD'"; fi`
+
+# Set initial Java heap size, e.g. '32m'.
+#
+`if [ ! -n "$DEFAULT_GG_XMS" ]; then echo "#DEFAULT_GG_XMS='$GG_XMS'"; else echo "DEFAULT_GG_XMS='$DEFAULT_GG_XMS'"; fi`
+
+# Set maximum Java heap size, e.g '512m'.
+#
+`if [ ! -n "$DEFAULT_GG_XMX" ]; then echo "#DEFAULT_GG_XMX='$GG_XMX'"; else echo "DEFAULT_GG_XMX='$DEFAULT_GG_XMX'"; fi`
+
+# Set native library path, e.g. '/usr/lib/jni'.
+#
+`if [ ! -n "$DEFAULT_GG_DJAVA_LIBRARY_PATH" -a -n "$GG_DJAVA_LIBRARY_PATH" ]; then echo "#DEFAULT_GG_DJAVA_LIBRARY_PATH='$GG_DJAVA_LIBRARY_PATH'"; elif [ ! -n "$DEFAULT_GG_DJAVA_LIBRARY_PATH" -a ! -n "$GG_DJAVA_LIBRARY_PATH" ]; then echo "#DEFAULT_GG_DJAVA_LIBRARY_PATH=''"; else echo "DEFAULT_GG_DJAVA_LIBRARY_PATH='$DEFAULT_GG_DJAVA_LIBRARY_PATH'"; fi`
+
+# Enable/disable the Xrender pipeline (true/false).
+#
+`if [ ! -n "$DEFAULT_GG_DSUN_JAVA2D_XRENDER" -a -n "$GG_DSUN_JAVA2D_XRENDER" ]; then echo "#DEFAULT_GG_DSUN_JAVA2D_XRENDER='$GG_DSUN_JAVA2D_XRENDER'"; elif [ ! -n "$DEFAULT_GG_DSUN_JAVA2D_XRENDER" -a ! -n "$GG_DSUN_JAVA2D_XRENDER" ]; then echo "#DEFAULT_GG_DSUN_JAVA2D_XRENDER=''"; else echo "DEFAULT_GG_DSUN_JAVA2D_XRENDER='$DEFAULT_GG_DSUN_JAVA2D_XRENDER'"; fi`
+
+# Enable/disable the OpenGL pipeline (true/false).
+#
+`if [ ! -n "$DEFAULT_GG_DSUN_JAVA2D_OPENGL" -a -n "$GG_DSUN_JAVA2D_OPENGL" ]; then echo "#DEFAULT_GG_DSUN_JAVA2D_OPENGL='$GG_DSUN_JAVA2D_OPENGL'"; elif [ ! -n "$DEFAULT_GG_DSUN_JAVA2D_OPENGL" -a ! -n "$GG_DSUN_JAVA2D_OPENGL" ]; then echo "#DEFAULT_GG_DSUN_JAVA2D_OPENGL=''"; else echo "DEFAULT_GG_DSUN_JAVA2D_OPENGL='$DEFAULT_GG_DSUN_JAVA2D_OPENGL'"; fi`
+
+
+# GEOGEBRA OPTIONS
+# -----------------------------------------------------------------------------
+
+# Enable/disable the splash screen (true/false).
+#
+`if [ ! -n "$DEFAULT_GG_SHOWSPLASH" ]; then echo "#DEFAULT_GG_SHOWSPLASH='$GG_SHOWSPLASH'"; else echo "DEFAULT_GG_SHOWSPLASH='$DEFAULT_GG_SHOWSPLASH'"; fi`
+
+# Enable/disable Undo (true/false).
+#
+`if [ ! -n "$DEFAULT_GG_ENABLEUNDO" -a -n "$GG_ENABLEUNDO" ]; then echo "#DEFAULT_GG_ENABLEUNDO='$GG_ENABLEUNDO'"; elif [ ! -n "$DEFAULT_GG_ENABLEUNDO" -a ! -n "$GG_ENABLEUNDO" ]; then echo "#DEFAULT_GG_ENABLEUNDO=''"; else echo "DEFAULT_GG_ENABLEUNDO='$DEFAULT_GG_ENABLEUNDO'"; fi`
+
+# Turn anti-aliasing on/off (true/false).
+#
+`if [ ! -n "$DEFAULT_GG_ANTIALIASING" -a -n "$GG_ANTIALIASING" ]; then echo "#DEFAULT_GG_ANTIALIASING='$GG_ANTIALIASING'"; elif [ ! -n "$DEFAULT_GG_ANTIALIASING" -a ! -n "$GG_ANTIALIASING" ]; then echo "#DEFAULT_GG_ANTIALIASING=''"; else echo "DEFAULT_GG_ANTIALIASING='$DEFAULT_GG_ANTIALIASING'"; fi`
+
+# Allow version check (on/off or true/false for single launch).
+#
+`if [ ! -n "$DEFAULT_GG_VERSIONCHECKALLOW" -a -n "$GG_VERSIONCHECKALLOW" ]; then echo "#DEFAULT_GG_VERSIONCHECKALLOW='$GG_VERSIONCHECKALLOW'"; elif [ ! -n "$DEFAULT_GG_VERSIONCHECKALLOW" -a ! -n "$GG_VERSIONCHECKALLOW" ]; then echo "#DEFAULT_GG_VERSIONCHECKALLOW=''"; else echo "DEFAULT_GG_VERSIONCHECKALLOW='$DEFAULT_GG_VERSIONCHECKALLOW'"; fi`
+EOF
+fi
+
+#---------------------------------------------
+# Prefer default settings from user config file.
+
+if [ -n "$DEFAULT_JAVACMD" ]; then
+	JAVACMD="$DEFAULT_JAVACMD"
+fi
+if [ -n "$DEFAULT_GG_XMS" ]; then
+	GG_XMS="$DEFAULT_GG_XMS"
+fi
+if [ -n "$DEFAULT_GG_XMX" ]; then
+	GG_XMX="$DEFAULT_GG_XMX"
+fi
+if [ -n "$DEFAULT_GG_DJAVA_LIBRARY_PATH" ]; then
+	GG_DJAVA_LIBRARY_PATH="$DEFAULT_GG_DJAVA_LIBRARY_PATH"
+fi
+if [ -n "$DEFAULT_GG_DSUN_JAVA2D_XRENDER" ]; then
+	GG_DSUN_JAVA2D_XRENDER="$DEFAULT_GG_DSUN_JAVA2D_XRENDER"
+fi
+if [ -n "$DEFAULT_GG_DSUN_JAVA2D_OPENGL" ]; then
+	GG_DSUN_JAVA2D_OPENGL="$DEFAULT_GG_DSUN_JAVA2D_OPENGL"
+fi
+if [ -n "$DEFAULT_GG_SHOWSPLASH" ]; then
+	GG_SHOWSPLASH="$DEFAULT_GG_SHOWSPLASH"
+fi
+if [ -n "$DEFAULT_GG_ENABLEUNDO" ]; then
+	GG_ENABLEUNDO="$DEFAULT_GG_ENABLEUNDO"
+fi
+if [ -n "$DEFAULT_GG_ANTIALIASING" ]; then
+	GG_ANTIALIASING="$DEFAULT_GG_ANTIALIASING"
+fi
+if [ -n "$DEFAULT_GG_VERSIONCHECKALLOW" ]; then
+	GG_VERSIONCHECKALLOW="$DEFAULT_GG_VERSIONCHECKALLOW"
+fi
+
+#---------------------------------------------
+# If $GG_SYS_CONFIG_PATH is set, check system settings file (if exist) and replace user settings file, if system settings file is newer.
+
+if [ -n "$GG_SYS_CONFIG_PATH" ]; then
+	if [ -r "$GG_SYS_CONFIG_PATH/geogebra.properties" ]; then
+		if [ "$GG_SYS_CONFIG_PATH/geogebra.properties" -nt "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties" -a -w "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties" ]; then
+			cp "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties" "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties.old"
+			cp "$GG_SYS_CONFIG_PATH/geogebra.properties" "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties"
+		elif [ ! -e "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties" ]; then
+			cp "$GG_SYS_CONFIG_PATH/geogebra.properties" "$GG_CONFIG_PATH/.config/$GG_SCRIPTNAME/geogebra.properties"
+		fi
+	fi
+fi
+
+#---------------------------------------------
+# Define usage function.
+
+function func_usage()
+{
+	cat << _USAGE
+Usage: $GG_SCRIPTNAME [Java-options] [GeoGebra-options] [FILE]
+
+GeoGebra - Dynamic mathematics software
+
+Java options:
+  -JavaCMD=<command>                 Set Java command, default $JAVACMD
+  -Xms<size>                         Set initial Java heap size, default $GG_XMS
+  -Xmx<size>                         Set maximum Java heap size, default $GG_XMX
+  -Djava.library.path=<path>         Set native library path`if [ -n "$GG_DJAVA_LIBRARY_PATH" ]; then echo ", default $GG_DJAVA_LIBRARY_PATH"; fi`
+  -Dsun.java2d.xrender=<boolean>     Enable/disable the Xrender pipeline (Use True for verbose output and true for non-verbose output)`if [ -n "$GG_DSUN_JAVA2D_XRENDER" ]; then echo ", default $GG_DSUN_JAVA2D_XRENDER"; fi`
+  -Dsun.java2d.opengl=<boolean>      Enable/disable the OpenGL pipeline (Use True for verbose output and true for non-verbose output)`if [ -n "$GG_DSUN_JAVA2D_OPENGL" ]; then echo ", default $GG_DSUN_JAVA2D_OPENGL"; fi`
+
+GeoGebra options:
+  --help                             Print this help message
+  --v                                Print version
+  --language=<iso_code>              Set language using locale code, e.g. en, de_AT
+  --showAlgebraInput=<boolean>       Show/hide algebra input field
+  --showAlgebraInputTop=<boolean>    Show algebra input field at top/bottom
+  --showAlgebraWindow=<boolean>      Show/hide algebra window
+  --showSpreadsheet=<boolean>        Show/hide spreadsheet
+  --showCAS=<boolean>                Show/hide CAS window
+  --showSplash=<boolean>             Enable/disable the splash screen, default $GG_SHOWSPLASH
+  --enableUndo=<boolean>             Enable/disable Undo`if [ -n "$GG_ENABLEUNDO" ]; then echo ", default $GG_ENABLEUNDO"; fi`
+  --fontSize=<number>                Set default font size
+  --showAxes=<boolean>               Show/hide coordinate axes
+  --showGrid=<boolean>               Show/hide grid
+  --settingsfile=[<path>|<filename>] Load/save settings from/in a local file, default $GG_SETTINGS_FILE
+  --resetSettings                    Reset current settings
+  --antiAliasing=<boolean>           Turn anti-aliasing on/off`if [ -n "$GG_ANTIALIASING" ]; then echo ", default $GG_ANTIALIASING"; fi`
+  --regressionFile=<filename>        Export textual representations of dependent objects, then exit
+  --versionCheckAllow=<setting>      Allow version check (on/off or true/false for single launch)`if [ -n "$GG_VERSIONCHECKALLOW" ]; then echo ", default $GG_VERSIONCHECKALLOW"; fi`
+  --logLevel=<level>                 Set logging level (EMERGENCY|ALERT|CRITICAL|ERROR|WARN|NOTICE|INFO|DEBUG|TRACE)
+  --logFile=<filename>               Set log file
+  --silent                           Completely mute logging
+  --prover=OPTIONS                   Set options for the prover subsystem (use --proverhelp for more information)
+  --2                                Force using 2D version (disable 3D)`if [ -w "$GG_CONFIG_FILE" ]; then  echo -e "\n\nEdit $GG_CONFIG_FILE to change defaults."; fi`
+_USAGE
+}
+
+#---------------------------------------------
+# Check for options --help, --2, and pass Java options to Java, others to GeoGebra.
+
+CLASS=org.geogebra.desktop.GeoGebra3D # by default 3D is used
+GG_OPTS=()
+for i in "$@"; do
+	case "$i" in
+	--help | --hel | --he | --h )
+		func_usage; exit 0 ;;
+        --2 )
+		CLASS=org.geogebra.desktop.GeoGebra ;;
+	esac
+	if [ $(expr match "$i" '.*--') -ne 0 ]; then
+		if [ $(expr match "$i" '.*--showSplash=') -ne 0 ]; then
+			GG_SHOWSPLASH=${i:13}
+			shift $((1))
+		elif [ $(expr match "$i" '.*--enableUndo=') -ne 0 ]; then
+			GG_ENABLEUNDO=${i:13}
+			shift $((1))
+		elif [ $(expr match "$i" '.*--antiAliasing=') -ne 0 ]; then
+			GG_ANTIALIASING=${i:15}
+			shift $((1))
+		elif [ $(expr match "$i" '.*--versionCheckAllow=') -ne 0 ]; then
+			GG_VERSIONCHECKALLOW=${i:20}
+			shift $((1))
+		elif [ $(expr match "$i" '.*--settingsfile=') -ne 0 ]; then
+			GG_SETTINGS_FILE=${i:15}
+			shift $((1))
+		else
+			GG_OPTS[${#GG_OPTS[*]}]="$i"
+			shift $((1))
+		fi
+	elif [ $(expr match "$i" '.*-Xms') -ne 0 ]; then
+		GG_XMS=${i:4}
+		shift $((1))
+	elif [ $(expr match "$i" '.*-Xmx') -ne 0 ]; then
+		GG_XMX=${i:4}
+		shift $((1))
+	elif [ $(expr match "$i" '.*-Djava.library.path=') -ne 0 ]; then
+		GG_DJAVA_LIBRARY_PATH=${i:20}
+		shift $((1))
+	elif [ $(expr match "$i" '.*-Dsun.java2d.xrender=') -ne 0 ]; then
+		GG_DSUN_JAVA2D_XRENDER=${i:21}
+		shift $((1))
+	elif [ $(expr match "$i" '.*-Dsun.java2d.opengl=') -ne 0 ]; then
+		GG_DSUN_JAVA2D_OPENGL=${i:20}
+		shift $((1))
+	elif [ $(expr match "$i" '.*-JavaCMD=') -ne 0 ]; then
+		JAVACMD=${i:9}
+		shift $((1))
+	fi
+done
+GG_OPTS[${#GG_OPTS[*]}]="--showSplash=$GG_SHOWSPLASH"
+if [ -n "$GG_ENABLEUNDO" ]; then
+	GG_OPTS[${#GG_OPTS[*]}]="--enableUndo=$GG_ENABLEUNDO"
+fi
+if [ -n "$GG_ANTIALIASING" ]; then
+	GG_OPTS[${#GG_OPTS[*]}]="--antiAliasing=$GG_ANTIALIASING"
+fi
+if [ -n "$GG_VERSIONCHECKALLOW" ]; then
+	GG_OPTS[${#GG_OPTS[*]}]="--versionCheckAllow=$GG_VERSIONCHECKALLOW"
+fi
+GG_OPTS[${#GG_OPTS[*]}]="--settingsfile=$GG_SETTINGS_FILE"
+JAVA_OPTS=("-Xms$GG_XMS" "-Xmx$GG_XMX" "-Dawt.useSystemAAFontSettings=on")
+if [ -n "$GG_DJAVA_LIBRARY_PATH" ]; then
+	JAVA_OPTS[${#JAVA_OPTS[*]}]="-Djava.library.path=$GG_DJAVA_LIBRARY_PATH"
+fi
+if [ -n "$GG_DSUN_JAVA2D_XRENDER" ]; then
+	JAVA_OPTS[${#JAVA_OPTS[*]}]="-Dsun.java2d.xrender=$GG_DSUN_JAVA2D_XRENDER"
+fi
+if [ -n "$GG_DSUN_JAVA2D_OPENGL" ]; then
+	JAVA_OPTS[${#JAVA_OPTS[*]}]="-Dsun.java2d.opengl=$GG_DSUN_JAVA2D_OPENGL"
+fi
+
+# Reading font size. xdpyinfo returns 96x96 on most screens
+# GG_SCREEN_DPI=`xdpyinfo 2>/dev/null | grep "dots per inch" | head -1 | awk '{print $2}' | grep x | tr x ' ' | awk '{print $1}'`
+# if [ "$GG_SCREEN_DPI" != "" ]; then
+#     GG_SCREEN_DIMENSIONS=`xdpyinfo 2>/dev/null | grep "dimensions" | head -1 | awk '{print $2}' | grep x | tr x ' '`
+#     if [ "$GG_SCREEN_DIMENSIONS" != "" ]; then
+#         GG_SCREEN_X=`echo $GG_SCREEN_DIMENSIONS | awk '{print $1}'`
+#         GG_SCREEN_Y=`echo $GG_SCREEN_DIMENSIONS | awk '{print $2}'`
+#         GG_OPTS[${#GG_OPTS[*]}]="--screenDPI=$GG_SCREEN_DPI"
+#         GG_OPTS[${#GG_OPTS[*]}]="--screenX=$GG_SCREEN_X"
+#         GG_OPTS[${#GG_OPTS[*]}]="--screenY=$GG_SCREEN_Y"
+#         fi
+#     fi
+
+# Disable jayatana (otherwise the JVM will crash in Ubuntu 15.04)
+unset JAVA_TOOL_OPTIONS
+
+#---------------------------------------------
+# Run
+
+JFXRT=`dirname "$JAVACMD"`/../lib/jfxrt.jar
+
+exec "$JAVACMD" "${JAVA_OPTS[@]}" \
+ -cp "$GG_PATH/geogebra.jar" \
+ "-Xbootclasspath/a:$JFXRT" \
+ $CLASS \
+ "${GG_OPTS[@]}" "$@"
