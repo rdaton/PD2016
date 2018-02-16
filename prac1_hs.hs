@@ -39,3 +39,54 @@ i' x y
        | (y>x) && (y>0) = 0
        | True = y-x
        
+--ejercicio 3
+
+tresIguales x y z 
+	| (x==y) && (y==z) = True
+	| True 			 = False
+	
+distintos x y z = not (tresIguales x y z)
+
+--ejercicio 4
+
+digitos x  = 
+	if ((x `div` 10) > 0) then  
+		(1 + digitos (x `div` 10))
+	else 1
+
+--ejercicio 5
+
+fac:: (Eq a, Num a) => a -> a
+
+
+fac n = 
+	if n == 0 then 1 
+	else n * fac (n-1)
+
+perm n =
+	fac n
+	
+var n m =
+	perm n
+	/
+	perm (n-m)
+	
+--ejercicio 6
+fib :: Int -> Integer
+fib n
+	| (n==0) = 1
+	| (n==1) = 1
+	| True 	 = fib (n-1) + fib (n-2)
+
+--ejercicio 7
+y :: Bool -> Bool -> Bool
+y True a = a
+y b True = b
+y _ _ = False
+
+--ejercicio 9
+
+unaFuncLaxa :: a Bool -> a
+
+unaFuncLaxa x y 
+	| (y==True)
